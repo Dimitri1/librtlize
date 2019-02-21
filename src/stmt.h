@@ -1,3 +1,5 @@
+//Dimitri Gerin 2019
+
 #ifndef __STMT__
 #define __STMT__
 #include "clang/AST/AST.h"

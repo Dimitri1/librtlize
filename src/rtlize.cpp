@@ -1,3 +1,5 @@
+//Dimitri Gerin 2019
+
 #include "hierarchical.h"
 
 using namespace rtlize;
@@ -25,7 +27,7 @@ public:
       if (baseName == "::sc_core::sc_module" ||
           baseName == "sc_core::sc_module" ||
           baseName == "class sc_core::sc_module") {
-        // cxxDecl->dump();
+          cxxDecl->dump();
         auto scm = std::make_shared<vlarch::scmodule>(cxxDecl);
 
         // push SC Module into scmoduleList

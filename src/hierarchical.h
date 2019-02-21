@@ -1,3 +1,5 @@
+//Dimitri Gerin 2019
+
 #ifndef __ARCHITECTURAL__
 #define __ARCHITECTURAL__
 #include "bind.h"

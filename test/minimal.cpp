@@ -10,7 +10,7 @@ SC_MODULE(writer) {
   void compute(void) {
     while (true) {
       wait(1, SC_NS);
-      val = (val+1);
+      val = (val + 1);
       cout << name() << ": sending " << val << endl;
       out.write(val);
     }
@@ -20,17 +20,17 @@ SC_MODULE(writer) {
 
 SC_MODULE(receiver) {
   sc_in<sc_int<8>> in;
-	sc_signal<sc_int<8>> sin;
-	sc_signal<sc_int<8>> swindow;
+  sc_signal<sc_int<8>> sin;
+  sc_signal<sc_int<8>> swindow;
 
   void compute(void) {
-		sin = in.read();
-		swindow = 0;
-		if (sin.read() > 10 ){
-			swindow = sin;
-		}
+    sin = in.read();
+    swindow = 0;
+    if (sin.read() > 10) {
+      swindow = sin;
+    }
     std::cout << name() << ": in rx " << sin << endl;
-		std::cout << name() << ": window rx " << swindow << endl;
+    std::cout << name() << ": window rx " << swindow << endl;
   }
 
   SC_CTOR(receiver) {
@@ -41,20 +41,20 @@ SC_MODULE(receiver) {
 
 SC_MODULE(receiver2) {
   sc_in<sc_int<8>> in;
-	sc_signal<sc_int<8>> sin;
-	sc_signal<sc_int<8>> swindow;
+  sc_signal<sc_int<8>> sin;
+  sc_signal<sc_int<8>> swindow;
 
   void compute(void) {
-		sin = in.read();
-		swindow = 0;
-		if (sin.read() > 10 ){
-			swindow = sin;
-		}
+    sin = in.read();
+    swindow = 0;
+    if (sin.read() > 10) {
+      swindow = sin;
+    }
     std::cout << name() << ": in rx " << sin << endl;
-		std::cout << name() << ": window rx " << swindow << endl;
+    std::cout << name() << ": window rx " << swindow << endl;
   }
 
-  SC_CTOR(receiver) {
+  SC_CTOR(receiver2) {
     SC_METHOD(compute);
     sensitive << in;
   }

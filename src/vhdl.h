@@ -1,3 +1,5 @@
+//Dimitri Gerin 2019
+
 #ifndef __VHDL__
 #define __VHDL__
 
