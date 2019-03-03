@@ -5,7 +5,7 @@ using namespace sc_core;
 using namespace std;
 
 SC_MODULE(writer) {
-  sc_out<sc_int<8>> out;
+  sc_out<                    sc_int<8>> out;
   int val = 0;
   void compute(void) {
     while (true) {

@@ -1,4 +1,4 @@
-//Dimitri Gerin 2019
+// Dimitri Gerin 2019
 
 #ifndef __BIND_H__
 #define __BIND_H__

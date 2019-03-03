@@ -1,4 +1,4 @@
-//Dimitri Gerin 2019
+// Dimitri Gerin 2019
 
 #ifndef __VHDL__
 #define __VHDL__
@@ -30,15 +30,62 @@ namespace qualifier {
 class base {
 public:
   using basePtrType = std::shared_ptr<base>;
+  std::string name_;
+
+  void setNameInfo(std::string name) { name_ = name; }
+
+  std::string getNameInfo() { return name_; }
 };
-
-class in : public base {};
-
-class out : public base {};
 
 class signal : public base {};
 
 } // namespace qualifier
+
+namespace decl {
+
+class portBase {
+public:
+  using basePtrType = std::shared_ptr<portBase>;
+
+  void setName(std::string name) { name_ = name; }
+
+  void setQualifier(qualifier::base::basePtrType qual) { qual_ = qual; }
+
+  virtual void dump() {}
+
+protected:
+  std::string name_;
+  qualifier::base::basePtrType qual_;
+};
+
+class in : public portBase {
+public:
+  using basePtrType = std::shared_ptr<in>;
+
+  void dump() override { // TODO : asserting
+    if (qual_.get())
+      llvm::errs() << name_ << " : in " << qual_.get()->getNameInfo();
+  }
+};
+
+class out : public portBase {
+public:
+  using basePtrType = std::shared_ptr<in>;
+
+  void dump() override { // TODO : asserting
+    if (qual_.get())
+      llvm::errs() << name_ << " : out " << qual_.get()->getNameInfo();
+  }
+};
+
+class generic {
+public:
+  using basePtrType = std::shared_ptr<generic>;
+
+  std::string name_;
+  qualifier::base::basePtrType qualifier;
+};
+} // namespace decl
 
 namespace builtin {
 
@@ -108,8 +155,8 @@ class component {
 public:
   using basePtrType = std::shared_ptr<component>;
 
-  std::vector<ssa::base::basePtrType> generic;
-  std::vector<ssa::base::basePtrType> port;
+  std::vector<decl::generic::basePtrType> generic;
+  std::vector<decl::portBase::basePtrType> port;
 };
 
 class body {

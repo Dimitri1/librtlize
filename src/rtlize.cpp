@@ -1,4 +1,4 @@
-//Dimitri Gerin 2019
+// Dimitri Gerin 2019
 
 #include "hierarchical.h"
 
@@ -27,7 +27,7 @@ public:
       if (baseName == "::sc_core::sc_module" ||
           baseName == "sc_core::sc_module" ||
           baseName == "class sc_core::sc_module") {
-          cxxDecl->dump();
+        // cxxDecl->dump();
         auto scm = std::make_shared<vlarch::scmodule>(cxxDecl);
 
         // push SC Module into scmoduleList
@@ -62,8 +62,11 @@ void rtlizeAction::EndSourceFileAction() {
 
   // dump SC Module List
   llvm::errs() << "[SC Module List]\n";
+  // for (auto &i : scmoduleList)
+  //    i->dump();
+
   for (auto &i : scmoduleList)
-    i->dump();
+    i->rtlize();
 
   clang::ASTFrontendAction::EndSourceFileAction();
 }

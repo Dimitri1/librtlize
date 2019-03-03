@@ -1,4 +1,4 @@
-//Dimitri Gerin 2019
+// Dimitri Gerin 2019
 
 #ifndef __ARCHITECTURAL__
 #define __ARCHITECTURAL__
@@ -43,6 +43,8 @@ public:
 
   std::string getNameInfo() { return this_->getNameAsString(); }
 
+  clang::FieldDecl *getComponent() { return this_; }
+
 protected:
   clang::FieldDecl *this_ = nullptr;
 };
@@ -54,6 +56,8 @@ public:
   scout(clang::FieldDecl *field) { this_ = field; }
 
   std::string getNameInfo() { return this_->getNameAsString(); }
+
+  clang::FieldDecl *getComponent() { return this_; }
 
 protected:
   clang::FieldDecl *this_ = nullptr;

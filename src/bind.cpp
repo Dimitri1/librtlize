@@ -1,4 +1,4 @@
-//Dimitri Gerin 2019
+// Dimitri Gerin 2019
 
 #include "bind.h"
 
@@ -41,7 +41,6 @@ bind *bind::solveBind(const clang::CXXMemberCallExpr *Call) {
     auto nameinfo = nd->getNameInfo();
 
     if (nameinfo.getAsString() == "bind") {
-      llvm::errs() << "CXXMemberCallExpr::" << nameinfo.getAsString() << "\n";
     } else
       return nullptr;
   }
@@ -62,7 +61,6 @@ bind *bind::solveBind(const clang::CXXMemberCallExpr *Call) {
           clang::dyn_cast<clang::MemberExpr>(subexpr);
       if (mExp) {
         auto nameInfo = mExp->getMemberNameInfo();
-        llvm::errs() << "Arg 0  as subexp :" << nameInfo.getAsString() << "\n";
         op = mExp;
         // subexpr->dump();
       }
@@ -80,7 +78,6 @@ bind *bind::solveBind(const clang::CXXMemberCallExpr *Call) {
       return nullptr;
     auto nameInfo = asMexp->getMemberNameInfo();
     calee = asMexp;
-    llvm::errs() << "Calee:" << nameInfo.getAsString() << "\n";
   }
 
   // case direct MemberExpr
@@ -89,7 +86,6 @@ bind *bind::solveBind(const clang::CXXMemberCallExpr *Call) {
     return nullptr;
   auto nameInfo = asMexp->getMemberNameInfo();
   calee = asMexp;
-  llvm::errs() << "Calee:" << nameInfo.getAsString() << "\n";
 
   if (calee && op)
     return new bind(calee, op, method);

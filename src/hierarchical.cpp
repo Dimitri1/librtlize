@@ -1,4 +1,4 @@
-//Dimitri Gerin 2019
+// Dimitri Gerin 2019
 
 #include "hierarchical.h"
 #include "bind.h"
@@ -30,8 +30,6 @@ void scctor::solveStmt() {
     auto curExpr = clang::dyn_cast<clang::CXXMemberCallExpr>(stmtIt);
     if (curExpr) {
       auto bind = vlstmt::bind::solveBind(curExpr);
-      llvm::errs() << "Inspece == > "
-                   << "\n";
       if (bind)
         stmtList_.push_back(std::shared_ptr<vlstmt::bind>(bind));
     }
@@ -112,7 +110,6 @@ bool scmodule::solveChildAsScsignal() {
 bool scmodule::solveChildAsScin() {
   for (clang::CXXRecordDecl::field_iterator fIt = this_->field_begin();
        fIt != this_->field_end(); fIt++) {
-    //(*fIt)->dump();
 
     std::string fItName = (*fIt)->getType().getAsString();
 
