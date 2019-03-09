@@ -61,7 +61,7 @@ void rtlizeAction::EndSourceFileAction() {
     i->solveMethod();
 
   // dump SC Module List
-  llvm::errs() << "[SC Module List]\n";
+  // llvm::errs() << "[SC Module List]\n";
   // for (auto &i : scmoduleList)
   //    i->dump();
 

@@ -24,7 +24,8 @@ std::string getTypeAsString(qt t, uint32_t dim) {
 void vhdl::architectural::entity::make_name(std::string nameInfo) {
   nameInfo_ = nameInfo;
 }
-void vhdl::architectural::entity::make_componentItf(
+
+void vhdl::architectural::entity::make_itf(
     std::vector<vlarch::scin::scinPtrType> &in,
     std::vector<vlarch::scout::scoutPtrType> &out) {
 
@@ -58,8 +59,9 @@ void vhdl::architectural::entity::make_componentItf(
     // build qualifier
     vhdlComponent->setQualifier(qual);
 
-    vhdlComponent->dump();
-    llvm::errs() << "\n";
+
+    componentIft->addPort(vhdlComponent);
+
   }
 
   // solve sc modules methodes
@@ -92,8 +94,7 @@ void vhdl::architectural::entity::make_componentItf(
     // build qualifier
     vhdlComponent->setQualifier(qual);
 
-    vhdlComponent->dump();
-    llvm::errs() << "\n";
+    componentIft->addPort(vhdlComponent);
   }
 
 }

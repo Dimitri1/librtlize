@@ -1,4 +1,4 @@
-// Dimitri Gerin 2019
+ // Dimitri Gerin 2019
 
 #include "hierarchical.h"
 #include "bind.h"
@@ -7,10 +7,17 @@
 namespace vlarch {
 
 void scmodule::rtlize() {
+
+  //create back end entity
   vhdl::architectural::entity::basePtrType entity =
-      std::make_shared<vhdl::architectural::entity>();
+    std::make_shared<vhdl::architectural::entity>();
   entity.get()->make_name(getNameInfo());
-  entity.get()->make_componentItf(scinList_, scoutList_);
+  entity.get()->make_itf(scinList_, scoutList_);
+
+  std::string strEntity = entity->dump();
+
+  llvm::errs() << strEntity << "\n";
+
 }
 
 void scmethodBase::solveStmt() {}

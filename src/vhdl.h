@@ -51,7 +51,9 @@ public:
 
   void setQualifier(qualifier::base::basePtrType qual) { qual_ = qual; }
 
-  virtual void dump() {}
+  virtual std::string dump() { return ""; }
+
+  virtual ~portBase() {}
 
 protected:
   std::string name_;
@@ -62,25 +64,38 @@ class in : public portBase {
 public:
   using basePtrType = std::shared_ptr<in>;
 
-  void dump() override { // TODO : asserting
+  std::string dump() override { // TODO : asserting
     if (qual_.get())
-      llvm::errs() << name_ << " : in " << qual_.get()->getNameInfo();
+      return name_ + " : in " + qual_.get()->getNameInfo();
+
+    return "";
   }
 };
 
 class out : public portBase {
 public:
-  using basePtrType = std::shared_ptr<in>;
+  using basePtrType = std::shared_ptr<out>;
 
-  void dump() override { // TODO : asserting
+  std::string dump() override { // TODO : asserting
     if (qual_.get())
-      llvm::errs() << name_ << " : out " << qual_.get()->getNameInfo();
+      return name_ + " : out " + qual_.get()->getNameInfo();
+
+    return "";
   }
 };
 
-class generic {
+class generic : public portBase {
 public:
   using basePtrType = std::shared_ptr<generic>;
+
+
+  std::string dump() override { // TODO : asserting
+    if (qual_.get())
+      return name_ + " : " + qual_.get()->getNameInfo();
+
+    return "";
+  }
+
 
   std::string name_;
   qualifier::base::basePtrType qualifier;
@@ -155,6 +170,10 @@ class component {
 public:
   using basePtrType = std::shared_ptr<component>;
 
+  void addPort(decl::portBase::basePtrType p) { port.push_back(p); }
+
+  void addGeneric(decl::generic::basePtrType p) { generic.push_back(p); }
+
   std::vector<decl::generic::basePtrType> generic;
   std::vector<decl::portBase::basePtrType> port;
 };
@@ -175,6 +194,12 @@ public:
   std::vector<builtin::base::basePtrType> builtinL;
   std::vector<component::basePtrType> componentL;
   body::basePtrType b;
+
+  std::string dump() {
+    std::string str;
+    str = "begin";
+    return str;
+  }
 };
 
 class entity {
@@ -183,12 +208,46 @@ public:
 
   void make_name(std::string nameInfo);
 
-  void make_componentItf(std::vector<vlarch::scin::scinPtrType> &in,
-                         std::vector<vlarch::scout::scoutPtrType> &out);
+  void make_itf(std::vector<vlarch::scin::scinPtrType> &in,
+                std::vector<vlarch::scout::scoutPtrType> &out);
+
+  entity() : componentIft(std::make_shared<component>()) {}
 
   // interface is a component
   component::basePtrType componentIft;
   architecture::basePtrType arch;
+
+  std::string dump() {
+    std::string str;
+
+    std::string lib = "library ieee;\nuse ieee.std_logic_1164.all;\nuse "
+                      "ieee.numeric_std.all;\n";
+
+    std::string componentGenerics = "";
+    std::string componentPorts = "";
+
+    for (auto &i : componentIft->port) {
+      componentPorts += i->dump() + ",\n";
+    }
+
+    for (auto &i : componentIft->generic) {
+      componentGenerics += i->dump() + ",\n";
+    }
+
+    std::string decl = "entity " + nameInfo_ + " is\n" +
+
+                       "generic(\n" + componentGenerics + ");\n" +
+
+                       "port(\n" + componentPorts + ");\n" + "end " +
+                       nameInfo_ + ";\n";
+
+    std::string archStr = "architecture arch of " + nameInfo_ + " is\n" +
+                          arch->dump() + "\n" + "end arch ;\n";
+
+    str = lib + decl + archStr;
+
+    return str;
+  }
 
 public:
   std::string nameInfo_;

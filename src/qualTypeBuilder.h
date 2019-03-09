@@ -42,7 +42,7 @@ auto getParams(std::string strType) {
           temp.erase(std::find(temp.begin(), temp.end(), ' '));
         }
         dim = std::atoi(temp.c_str());
-        llvm::errs() << "temp => " << temp << "\n";
+        //llvm::errs() << "temp => " << temp << "\n";
       }
     }
 
