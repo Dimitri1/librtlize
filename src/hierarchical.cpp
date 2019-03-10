@@ -11,11 +11,14 @@ void scmodule::rtlize() {
   //create back end entity
   vhdl::architectural::entity::basePtrType entity =
     std::make_shared<vhdl::architectural::entity>();
+  //name
   entity.get()->make_name(getNameInfo());
-  entity.get()->make_itf(scinList_, scoutList_);
 
+  //itf
+  entity.get()->set_itf(vhdl::architectural::make_itf(scinList_, scoutList_));
+
+  entity.get()->getArchitecture().get()->make_componentList(scmoduleList_);
   std::string strEntity = entity->dump();
-
   llvm::errs() << strEntity << "\n";
 
 }

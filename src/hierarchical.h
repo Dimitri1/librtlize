@@ -179,6 +179,16 @@ public:
     }
   }
 
+
+  std::vector<scin::scinPtrType> getScinList()
+  {
+    return scinList_;
+  }
+  std::vector<scout::scoutPtrType> getScoutList()
+  {
+    return scoutList_;
+  }
+
 protected:
   std::vector<scmethodPtrType> scmethodList_;
   std::vector<scthreadPtrType> scthreadList_;

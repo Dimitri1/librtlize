@@ -174,9 +174,19 @@ public:
 
   void addGeneric(decl::generic::basePtrType p) { generic.push_back(p); }
 
+  void setNameInfo(std::string n) { nameInfo_ = n; }
+
+  std::string getNameInfo() { return nameInfo_;}
+
+  std::string nameInfo_;
+
   std::vector<decl::generic::basePtrType> generic;
   std::vector<decl::portBase::basePtrType> port;
 };
+
+vhdl::architectural::component::basePtrType
+make_itf(std::vector<vlarch::scin::scinPtrType> &in,
+         std::vector<vlarch::scout::scoutPtrType> &out);
 
 class body {
 public:
@@ -195,11 +205,59 @@ public:
   std::vector<component::basePtrType> componentL;
   body::basePtrType b;
 
-  std::string dump() {
-    std::string str;
-    str = "begin";
-    return str;
+  void make_componentList(std::vector<vlarch::scmodule::scmodulePtrType> &mL) {
+
+
+    // make comonent decl for each child component of this architecture
+    for (auto &j : mL) {
+
+      std::string nameInfo = j->getNameInfo();
+
+
+      auto scinList = j->getScinList();
+      auto scoutList = j->getScoutList();
+
+      vhdl::architectural::component::basePtrType componentBuild =
+          vhdl::architectural::make_itf(scinList, scoutList);
+      componentBuild->setNameInfo(nameInfo);
+      componentL.push_back(componentBuild);
+
+    }
   }
+
+  std::string dump() {
+    std::string archStr = "";
+
+    std::string headerStr ="";
+
+    for (auto & componentBuild : componentL){
+      std::string componentGenerics = "";
+      std::string componentPorts = "";
+      for (auto &i : componentBuild.get()->port) {
+        componentPorts += i->dump() + ";\n";
+      }
+
+      for (auto &i : componentBuild.get()->generic) {
+        componentGenerics += i->dump() + ";\n";
+      }
+
+      std::string decl = "component " + componentBuild.get()->getNameInfo() + " \n" +
+
+        "generic(\n" + componentGenerics + ");\n" +
+
+        "port(\n" + componentPorts + ");\n" + "end component;\n";
+
+      headerStr += decl;
+    }
+
+    std::string bodyStr = "begin\n";
+
+    return archStr = headerStr + bodyStr;
+  }
+
+
+  void make_builtinList() {}
+
 };
 
 class entity {
@@ -208,14 +266,17 @@ public:
 
   void make_name(std::string nameInfo);
 
-  void make_itf(std::vector<vlarch::scin::scinPtrType> &in,
-                std::vector<vlarch::scout::scoutPtrType> &out);
+  void set_itf(component::basePtrType itf) { componentIft = itf; }
 
-  entity() : componentIft(std::make_shared<component>()) {}
+  entity()
+      : componentIft(std::make_shared<component>()),
+        arch(std::make_shared<architecture>()) {}
 
   // interface is a component
   component::basePtrType componentIft;
   architecture::basePtrType arch;
+
+  architecture::basePtrType getArchitecture() { return arch; }
 
   std::string dump() {
     std::string str;

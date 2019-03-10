@@ -25,10 +25,11 @@ void vhdl::architectural::entity::make_name(std::string nameInfo) {
   nameInfo_ = nameInfo;
 }
 
-void vhdl::architectural::entity::make_itf(
+vhdl::architectural::component::basePtrType  vhdl::architectural::make_itf(
     std::vector<vlarch::scin::scinPtrType> &in,
     std::vector<vlarch::scout::scoutPtrType> &out) {
 
+  component::basePtrType itf =  std::make_shared<component>();
   // solve sc modules methodes
   for (auto &i : in) {
     auto clangComponent = i.get()->getComponent();
@@ -60,7 +61,7 @@ void vhdl::architectural::entity::make_itf(
     vhdlComponent->setQualifier(qual);
 
 
-    componentIft->addPort(vhdlComponent);
+    itf->addPort(vhdlComponent);
 
   }
 
@@ -94,7 +95,9 @@ void vhdl::architectural::entity::make_itf(
     // build qualifier
     vhdlComponent->setQualifier(qual);
 
-    componentIft->addPort(vhdlComponent);
+    itf->addPort(vhdlComponent);
   }
+
+  return itf;
 
 }
