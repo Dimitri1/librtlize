@@ -1,7 +1,7 @@
 // Dimitri Gerin 2019
 
 #include "hierarchical.h"
-
+#include "vhdl.h"
 using namespace rtlize;
 
 static clang::FrontendPluginRegistry::Add<rtlizeAction>
@@ -65,8 +65,11 @@ void rtlizeAction::EndSourceFileAction() {
   // for (auto &i : scmoduleList)
   //    i->dump();
 
+  std::string rtlCode = vhdl::architectural::lib;
   for (auto &i : scmoduleList)
-    i->rtlize();
+    rtlCode += i->rtlize() + "\n";
+
+  llvm::errs() << rtlCode;
 
   clang::ASTFrontendAction::EndSourceFileAction();
 }

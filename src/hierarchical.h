@@ -31,6 +31,8 @@ public:
 
   std::string getNameInfo() { return this_->getNameAsString(); }
 
+  clang::FieldDecl *getComponent() { return this_; }
+
 protected:
   clang::FieldDecl *this_ = nullptr;
 };
@@ -118,7 +120,7 @@ public:
 
   scmodule(clang::CXXRecordDecl *cxxNode) { this_ = cxxNode; }
 
-  void rtlize();
+  std::string rtlize();
 
   bool solveCtor();
 
@@ -179,15 +181,8 @@ public:
     }
   }
 
-
-  std::vector<scin::scinPtrType> getScinList()
-  {
-    return scinList_;
-  }
-  std::vector<scout::scoutPtrType> getScoutList()
-  {
-    return scoutList_;
-  }
+  std::vector<scin::scinPtrType> getScinList() { return scinList_; }
+  std::vector<scout::scoutPtrType> getScoutList() { return scoutList_; }
 
 protected:
   std::vector<scmethodPtrType> scmethodList_;

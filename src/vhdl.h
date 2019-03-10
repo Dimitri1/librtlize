@@ -37,8 +37,6 @@ public:
   std::string getNameInfo() { return name_; }
 };
 
-class signal : public base {};
-
 } // namespace qualifier
 
 namespace decl {
@@ -47,7 +45,7 @@ class portBase {
 public:
   using basePtrType = std::shared_ptr<portBase>;
 
-  void setName(std::string name) { name_ = name; }
+  void setNameInfo(std::string n) { nameInfo_ = n; }
 
   void setQualifier(qualifier::base::basePtrType qual) { qual_ = qual; }
 
@@ -56,8 +54,19 @@ public:
   virtual ~portBase() {}
 
 protected:
-  std::string name_;
+  std::string nameInfo_;
   qualifier::base::basePtrType qual_;
+};
+
+class signal : public portBase {
+public:
+  using basePtrType = std::shared_ptr<portBase>;
+  std::string dump() override { // TODO : asserting
+    if (qual_.get())
+      return "signal " + nameInfo_ + " : " + qual_.get()->getNameInfo();
+
+    return "";
+  }
 };
 
 class in : public portBase {
@@ -66,7 +75,7 @@ public:
 
   std::string dump() override { // TODO : asserting
     if (qual_.get())
-      return name_ + " : in " + qual_.get()->getNameInfo();
+      return nameInfo_ + " : in " + qual_.get()->getNameInfo();
 
     return "";
   }
@@ -78,7 +87,7 @@ public:
 
   std::string dump() override { // TODO : asserting
     if (qual_.get())
-      return name_ + " : out " + qual_.get()->getNameInfo();
+      return nameInfo_ + " : out " + qual_.get()->getNameInfo();
 
     return "";
   }
@@ -88,14 +97,12 @@ class generic : public portBase {
 public:
   using basePtrType = std::shared_ptr<generic>;
 
-
   std::string dump() override { // TODO : asserting
     if (qual_.get())
       return name_ + " : " + qual_.get()->getNameInfo();
 
     return "";
   }
-
 
   std::string name_;
   qualifier::base::basePtrType qualifier;
@@ -129,7 +136,7 @@ public:
 namespace sensivity {
 class base {
 public:
-  std::vector<builtin::base::basePtrType> builtinList;
+  std::vector<decl::portBase::basePtrType> builtinList;
 };
 } // namespace sensivity
 
@@ -176,7 +183,7 @@ public:
 
   void setNameInfo(std::string n) { nameInfo_ = n; }
 
-  std::string getNameInfo() { return nameInfo_;}
+  std::string getNameInfo() { return nameInfo_; }
 
   std::string nameInfo_;
 
@@ -201,18 +208,18 @@ class architecture {
 public:
   using basePtrType = std::shared_ptr<architecture>;
 
-  std::vector<builtin::base::basePtrType> builtinL;
+  std::vector<decl::portBase::basePtrType> builtinL;
   std::vector<component::basePtrType> componentL;
   body::basePtrType b;
 
-  void make_componentList(std::vector<vlarch::scmodule::scmodulePtrType> &mL) {
+  void make_builtinList(std::vector<vlarch::scsignal::scsignalPtrType> &sL);
 
+  void make_componentList(std::vector<vlarch::scmodule::scmodulePtrType> &mL) {
 
     // make comonent decl for each child component of this architecture
     for (auto &j : mL) {
 
       std::string nameInfo = j->getNameInfo();
-
 
       auto scinList = j->getScinList();
       auto scoutList = j->getScoutList();
@@ -221,16 +228,15 @@ public:
           vhdl::architectural::make_itf(scinList, scoutList);
       componentBuild->setNameInfo(nameInfo);
       componentL.push_back(componentBuild);
-
     }
   }
 
   std::string dump() {
     std::string archStr = "";
 
-    std::string headerStr ="";
+    std::string headerStr = "";
 
-    for (auto & componentBuild : componentL){
+    for (auto &componentBuild : componentL) {
       std::string componentGenerics = "";
       std::string componentPorts = "";
       for (auto &i : componentBuild.get()->port) {
@@ -241,25 +247,30 @@ public:
         componentGenerics += i->dump() + ";\n";
       }
 
-      std::string decl = "component " + componentBuild.get()->getNameInfo() + " \n" +
+      std::string decl =
+          "component " + componentBuild.get()->getNameInfo() + " \n" +
 
-        "generic(\n" + componentGenerics + ");\n" +
+          "generic(\n" + componentGenerics + ");\n" +
 
-        "port(\n" + componentPorts + ");\n" + "end component;\n";
+          "port(\n" + componentPorts + ");\n" + "end component;\n";
 
       headerStr += decl;
     }
+
+    std::string builtInStrL = "";
+    for (auto &componentBuild : builtinL) {
+      builtInStrL += componentBuild->dump() + ";\n";
+    }
+    headerStr += builtInStrL;
 
     std::string bodyStr = "begin\n";
 
     return archStr = headerStr + bodyStr;
   }
-
-
-  void make_builtinList() {}
-
 };
 
+static std::string lib = "library ieee;\nuse ieee.std_logic_1164.all;\nuse "
+                         "ieee.numeric_std.all;\n";
 class entity {
 public:
   using basePtrType = std::shared_ptr<entity>;
@@ -280,9 +291,6 @@ public:
 
   std::string dump() {
     std::string str;
-
-    std::string lib = "library ieee;\nuse ieee.std_logic_1164.all;\nuse "
-                      "ieee.numeric_std.all;\n";
 
     std::string componentGenerics = "";
     std::string componentPorts = "";
@@ -305,7 +313,7 @@ public:
     std::string archStr = "architecture arch of " + nameInfo_ + " is\n" +
                           arch->dump() + "\n" + "end arch ;\n";
 
-    str = lib + decl + archStr;
+    str = decl + archStr;
 
     return str;
   }
