@@ -4,7 +4,7 @@
 
 namespace vlstmt {
 
-void bind::dump() {
+void  bind::dump() {
   llvm::errs() << "===========+>BIND\n";
   calee_->dump();
   op_->dump();
@@ -62,7 +62,7 @@ bind *bind::solveBind(const clang::CXXMemberCallExpr *Call) {
       if (mExp) {
         auto nameInfo = mExp->getMemberNameInfo();
         op = mExp;
-        // subexpr->dump();
+        //subexpr->dump();
       }
     }
   }

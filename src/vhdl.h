@@ -144,15 +144,26 @@ namespace ssa {
 
 class base {
 public:
-  using basePtrType = std::shared_ptr<base>;
 
+   virtual  std::string dump(){
+
+      return  "";
+  }
+
+  using basePtrType = std::shared_ptr<base>;
   std::string calee;
   std::string op;
+  std::string ope;
 };
 
 class bind : public base {
 public:
-  std::string ope = "=>";
+
+  std::string dump() override {
+
+    return op + "=>" + calee ;
+
+  }
 
   bind() {}
 };
@@ -177,6 +188,8 @@ class component {
 public:
   using basePtrType = std::shared_ptr<component>;
 
+  using scmPtrType = vlarch::scmodule::scmPtrType;
+
   void addPort(decl::portBase::basePtrType p) { port.push_back(p); }
 
   void addGeneric(decl::generic::basePtrType p) { generic.push_back(p); }
@@ -186,6 +199,14 @@ public:
   std::string getNameInfo() { return nameInfo_; }
 
   std::string nameInfo_;
+
+  vlarch::scmodule::scmodulePtrType  getScmDecl() { return scm_->getDecl(); }
+  scmPtrType getScmField() { return scm_; }
+
+  void setScmField( scmPtrType scf) {  scm_ = scf; }
+
+
+  scmPtrType scm_;
 
   std::vector<decl::generic::basePtrType> generic;
   std::vector<decl::portBase::basePtrType> port;
@@ -210,25 +231,81 @@ public:
 
   std::vector<decl::portBase::basePtrType> builtinL;
   std::vector<component::basePtrType> componentL;
+  std::vector<ssa::base::basePtrType> bindL;
+
   body::basePtrType b;
+
+  //todo use ref to avoid vector copy
+  void make_bindList( std::vector<vlstmt::stmt::stmtPtrType> sL){
+
+    for (auto &j : sL) {
+
+
+      auto componentBuild = std::make_shared<ssa::bind>();
+      std::string op = j.get()->getOp()->getMemberNameInfo().getAsString();
+      std::string calee = j.get()->getCalee()->getMemberNameInfo().getAsString();
+
+      componentBuild.get()->op = op;
+      componentBuild.get()->calee = calee;
+
+
+        /* std::string */
+
+      /* std::string nameInfo = j->getNameInfo(); */
+
+      /* auto scinList = j->getScinList(); */
+      /* auto scoutList = j->getScoutList(); */
+
+      /* vhdl::architectural::component::basePtrType componentBuild = */
+      /*     vhdl::architectural::make_itf(scinList, scoutList); */
+      /* componentBuild->setNameInfo(nameInfo); */
+      //componentL.push_back(componentBuild);
+
+      bindL.push_back(componentBuild);
+    }
+  }
 
   void make_builtinList(std::vector<vlarch::scsignal::scsignalPtrType> &sL);
 
-  void make_componentList(std::vector<vlarch::scmodule::scmodulePtrType> &mL) {
+  void make_componentList(std::vector<vlarch::scmodule::scmPtrType> &mL) {
 
     // make comonent decl for each child component of this architecture
     for (auto &j : mL) {
 
-      std::string nameInfo = j->getNameInfo();
+      std::string nameInfo = j->getDecl()->getNameInfo();
 
-      auto scinList = j->getScinList();
-      auto scoutList = j->getScoutList();
+      auto scinList = j->getDecl()->getScinList();
+      auto scoutList = j->getDecl()->getScoutList();
 
       vhdl::architectural::component::basePtrType componentBuild =
-          vhdl::architectural::make_itf(scinList, scoutList);
+        vhdl::architectural::make_itf(scinList, scoutList);
       componentBuild->setNameInfo(nameInfo);
-      componentL.push_back(componentBuild);
+
+      componentBuild->setScmField(j);
+
+      //is Field already present in the list, break
+      bool findIfField = false;
+      for(auto & i :componentL){
+
+        /* llvm::errs() << (i->getScmField()->getDecl()) << "=\n"; */
+        /* llvm::errs() << ( j->getDecl()) << "\n"; */
+
+
+        //llvm::errs() <<  (i->getScmField()) <<  "\n";
+
+        findIfField = (i->getScmField()->getDecl() == j->getDecl());
+        if(findIfField)
+          break;
+      }
+
+      if (!findIfField)
+        componentL.push_back(componentBuild);
+
     }
+  }
+
+  std::string dumpField(){
+    return  "";//scm_->getNameInfo();
   }
 
   std::string dump() {
@@ -264,6 +341,10 @@ public:
     headerStr += builtInStrL;
 
     std::string bodyStr = "begin\n";
+
+    for (auto &componentBuild : bindL) {
+      bodyStr += componentBuild->dump() + ";\n";
+    }
 
     return archStr = headerStr + bodyStr;
   }

@@ -77,7 +77,7 @@ public:
     r1 = new receiver("receiver1");
     w.out.bind(sig);
     r.in.bind(sig);
-    r1->in.bind(sig);
+    //r1->in.bind(sig);
   }
 };
 

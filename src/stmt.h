@@ -23,6 +23,10 @@ public:
 
   virtual void dump() {}
 
+  clang::MemberExpr const * getOp(){return op_;}
+
+  clang::MemberExpr const * getCalee(){return calee_;}
+
 protected:
   clang::MemberExpr const *op_ = nullptr;
   clang::MemberExpr const *calee_ = nullptr;

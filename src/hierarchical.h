@@ -70,14 +70,18 @@ public:
   using scmethodBasePtrType = std::shared_ptr<scmethodBase>;
   using base = scmethodBase;
 
-  virtual void dump() {
+  virtual void  dump() {
     for (auto &i : stmtList_) {
-      i->dump();
+       i->dump();
     }
   }
   scmethodBase(clang::CXXMethodDecl *cxxNode) { this_ = cxxNode; }
 
   virtual void solveStmt();
+
+
+  std::vector<vlstmt::stmt::stmtPtrType> getStmtList()
+    {return stmtList_;}
 
 protected:
   clang::CXXMethodDecl *this_ = nullptr;
@@ -90,7 +94,7 @@ public:
 
   void solveStmt() override;
 
-  void dump() override { base::dump(); }
+  void   dump() override { base::dump(); }
 
 public:
   scctor(clang::CXXMethodDecl *cxxNode) : scmethodBase(cxxNode) {}
@@ -111,8 +115,11 @@ public:
   scthread(clang::CXXMethodDecl *cxxNode) : scmethodBase(cxxNode) {}
 };
 
+class scm;
+
 class scmodule {
 public:
+  using scmPtrType = std::shared_ptr<scm>;
   using scmodulePtrType = std::shared_ptr<scmodule>;
   using scctorPtrType = scctor::scctorPtrType;
   using scmethodPtrType = scmethod::scmethodPtrType;
@@ -126,7 +133,10 @@ public:
 
   void addCtor(scctorPtrType ctor) { ctor_ = ctor; }
 
-  void addScModuleChild(scmodulePtrType scm) { scmoduleList_.push_back(scm); }
+  scctorPtrType getCtor(){return ctor_;}
+
+
+  void addScModuleChild(scmPtrType scm) { scmoduleList_.push_back(scm); }
 
   void addScSignalChild(clang::FieldDecl *field) {
     scsignalList_.push_back(std::make_shared<scsignal>(field));
@@ -163,10 +173,11 @@ public:
     PRINT_DBG(COLOR_MAGENTA, "ctor()");
     ctor_->dump();
 
-    for (auto &i : scmoduleList_) {
-      PRINT_DBG(COLOR_MAGENTA, "|_");
-      PRINT_DBG(COLOR_MAGENTA, i->getNameInfo() << "\n");
-    }
+    /* for (auto &i : scmoduleList_) { */
+    /*   PRINT_DBG(COLOR_MAGENTA, "|_"); */
+    /*   //      PRINT_DBG(COLOR_MAGENTA, i->getNameInfo() << "\n"); */
+    /* } */
+
     for (auto &i : scsignalList_) {
       PRINT_DBG(COLOR_RED, "|_");
       PRINT_DBG(COLOR_RED, "signal " << i->getNameInfo() << "\n");
@@ -181,6 +192,8 @@ public:
     }
   }
 
+  auto getThis(){return this_;}
+
   std::vector<scin::scinPtrType> getScinList() { return scinList_; }
   std::vector<scout::scoutPtrType> getScoutList() { return scoutList_; }
 
@@ -189,12 +202,29 @@ protected:
   std::vector<scthreadPtrType> scthreadList_;
 
   scctorPtrType ctor_;
-  std::vector<scmodulePtrType> scmoduleList_;
+  std::vector<scmPtrType> scmoduleList_;
   std::vector<scsignal::scsignalPtrType> scsignalList_;
   std::vector<scin::scinPtrType> scinList_;
   std::vector<scout::scoutPtrType> scoutList_;
 
   clang::CXXRecordDecl *this_ = nullptr;
+};
+
+class scm {
+public:
+  scm(clang::FieldDecl *field, scmodule::scmodulePtrType scm) { this_ = field; scmDecl_ = scm; }
+
+  std::string getNameInfo() { return this_->getNameAsString(); }
+
+  clang::FieldDecl * getThis() { return this_; }
+
+
+
+  scmodule::scmodulePtrType getDecl() { return scmDecl_; }
+
+protected:
+  clang::FieldDecl *this_ = nullptr;
+  scmodule::scmodulePtrType  scmDecl_;
 };
 
 } // end namespace vlarch
