@@ -46,6 +46,10 @@ public:
   using basePtrType = std::shared_ptr<portBase>;
 
   void setNameInfo(std::string n) { nameInfo_ = n; }
+  std::string  getNameInfo() { return nameInfo_; }
+
+
+  std::string getNameInfo(std::string n) { return nameInfo_ ; }
 
   void setQualifier(qualifier::base::basePtrType qual) { qual_ = qual; }
 
@@ -53,7 +57,15 @@ public:
 
   virtual ~portBase() {}
 
+  void bind (std::string n){
+    llvm::errs() << "Bind with " << n << "\n";
+    bindee_=n;
+  }
+
+  std::string getBindee(){return bindee_;}
+
 protected:
+  std::string bindee_="";
   std::string nameInfo_;
   qualifier::base::basePtrType qual_;
 };
@@ -196,6 +208,7 @@ public:
 
   void setNameInfo(std::string n) { nameInfo_ = n; }
 
+
   std::string getNameInfo() { return nameInfo_; }
 
   std::string nameInfo_;
@@ -210,6 +223,7 @@ public:
 
   std::vector<decl::generic::basePtrType> generic;
   std::vector<decl::portBase::basePtrType> port;
+
 };
 
 vhdl::architectural::component::basePtrType
@@ -235,11 +249,13 @@ public:
 
   body::basePtrType b;
 
+
+
   //todo use ref to avoid vector copy
-  void make_bindList( std::vector<vlstmt::stmt::stmtPtrType> sL){
+  //procuce map of each compoent
+  void make_componentMap( std::vector<vlstmt::stmt::stmtPtrType> sL){
 
     for (auto &j : sL) {
-
 
       auto componentBuild = std::make_shared<ssa::bind>();
       std::string op = j.get()->getOp()->getMemberNameInfo().getAsString();
@@ -248,18 +264,35 @@ public:
       componentBuild.get()->op = op;
       componentBuild.get()->calee = calee;
 
+      //get child name
+      auto clangOpComponent =  j.get()->getOp();
 
-        /* std::string */
+      auto child = * clangOpComponent->child_begin();
 
-      /* std::string nameInfo = j->getNameInfo(); */
+      std::string clangScModuleFieldDeclComponentName;
+      //if(child){
+      auto asMexp = clang::dyn_cast<clang::MemberExpr>(child);
 
-      /* auto scinList = j->getScinList(); */
-      /* auto scoutList = j->getScoutList(); */
+      std::string nameInfo;
+      if(asMexp){
+        nameInfo = asMexp->getMemberNameInfo().getAsString();
+        clangScModuleFieldDeclComponentName =  nameInfo  ; //  child->getMemberNameInfo();
+      }
 
-      /* vhdl::architectural::component::basePtrType componentBuild = */
-      /*     vhdl::architectural::make_itf(scinList, scoutList); */
-      /* componentBuild->setNameInfo(nameInfo); */
-      //componentL.push_back(componentBuild);
+      for (auto i : componentL){
+        if ( clangScModuleFieldDeclComponentName ==i->getScmField()->getNameInfo() ){
+          for (auto k : i->port){
+            if (0)
+              {
+                llvm::errs() << "Clang " << clangOpComponent->getMemberNameInfo().getAsString() << "\n";
+                llvm::errs() << "PortBase " << k->getNameInfo()  << "\n";
+              }
+            if (k->getNameInfo() == clangOpComponent->getMemberNameInfo().getAsString())
+              k->bind(calee);
+          }
+        }
+      }
+
 
       bindL.push_back(componentBuild);
     }
@@ -283,23 +316,8 @@ public:
 
       componentBuild->setScmField(j);
 
-      //is Field already present in the list, break
-      bool findIfField = false;
-      for(auto & i :componentL){
 
-        /* llvm::errs() << (i->getScmField()->getDecl()) << "=\n"; */
-        /* llvm::errs() << ( j->getDecl()) << "\n"; */
-
-
-        //llvm::errs() <<  (i->getScmField()) <<  "\n";
-
-        findIfField = (i->getScmField()->getDecl() == j->getDecl());
-        if(findIfField)
-          break;
-      }
-
-      if (!findIfField)
-        componentL.push_back(componentBuild);
+      componentL.push_back(componentBuild);
 
     }
   }
@@ -313,9 +331,24 @@ public:
 
     std::string headerStr = "";
 
+    std::vector<component::basePtrType> tmpComponentL;
+
+    //dump Component
     for (auto &componentBuild : componentL) {
       std::string componentGenerics = "";
       std::string componentPorts = "";
+
+      //avoid double inclusion
+      bool findIfField = false;
+      for(auto & i : tmpComponentL){
+        findIfField = (i->getNameInfo() == componentBuild->getNameInfo()) ;
+        if(findIfField)
+          break;
+      }
+      if(findIfField)
+        break ;
+
+
       for (auto &i : componentBuild.get()->port) {
         componentPorts += i->dump() + ";\n";
       }
@@ -332,6 +365,35 @@ public:
           "port(\n" + componentPorts + ");\n" + "end component;\n";
 
       headerStr += decl;
+
+      //avoid double decl inclusion by registering a second list
+      tmpComponentL.push_back(componentBuild);
+    }
+
+
+    //dump map
+    for (auto &componentBuild : componentL) {
+      std::string componentGenerics = "";
+      std::string componentPorts = "";
+
+
+      for (auto &i : componentBuild.get()->port) {
+        componentPorts += i->dump() + ";\n";
+      }
+
+      for (auto &i : componentBuild.get()->generic) {
+        componentGenerics += i->dump() + ";\n";
+      }
+
+      std::string decl =
+          "component " + componentBuild.get()->getNameInfo() + " \n" +
+
+          "generic(\n" + componentGenerics + ");\n" +
+
+          "port(\n" + componentPorts + ");\n" + "end component;\n";
+
+      headerStr += decl;
+
     }
 
     std::string builtInStrL = "";
@@ -346,7 +408,29 @@ public:
       bodyStr += componentBuild->dump() + ";\n";
     }
 
-    return archStr = headerStr + bodyStr;
+    std::string mapStr = "";
+
+    //dump map
+    for (auto &componentBuild : componentL) {
+      std::string componentGenerics = "";
+      std::string componentPorts = "";
+
+
+      for (auto &i : componentBuild.get()->port) {
+        componentPorts += i->getNameInfo()  +  "=>"  + i->getBindee()  + ";\n";
+      }
+
+      /* for (auto &i : componentBuild.get()->generic) { */
+      /*   componentGenerics += i->dump() + ";\n"; */
+      /* } */
+
+      std::string decl =   componentBuild->getScmField()->getNameInfo() + ":" + componentBuild.get()->getNameInfo() + "\nport map (\n" + componentPorts + componentGenerics + ");\n" ;
+       mapStr += decl;
+
+    }
+
+
+    return archStr = headerStr + bodyStr + mapStr;
   }
 };
 

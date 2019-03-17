@@ -25,17 +25,14 @@ std::string scmodule::rtlize() {
   // builtin member
   entity.get()->getArchitecture().get()->make_builtinList(scsignalList_);
 
-
-  entity.get()->getArchitecture().get()->make_bindList(getCtor().get()->getStmtList());
-
+  entity.get()->getArchitecture().get()->make_componentMap(getCtor().get()->getStmtList());
 
   // ctor
-   for (auto &i : getCtor().get()->getStmtList())
-     i->dump()  ;
-
+  // for (auto &i : getCtor().get()->getStmtList()) {
+  //   i->dump();
+  // }
 
   // processes
-
   std::string strEntity = entity->dump();
 
   return strEntity;
@@ -58,8 +55,9 @@ void scctor::solveStmt() {
     auto curExpr = clang::dyn_cast<clang::CXXMemberCallExpr>(stmtIt);
     if (curExpr) {
       auto bind = vlstmt::bind::solveBind(curExpr);
-      if (bind)
+      if (bind) {
         stmtList_.push_back(std::shared_ptr<vlstmt::bind>(bind));
+      }
     }
   }
 
@@ -100,7 +98,7 @@ bool scmodule::solveMember(std::vector<scmodulePtrType> &scmList) {
 bool scmodule::solveChildAsModule(std::vector<scmodulePtrType> &scmList) {
   for (clang::CXXRecordDecl::field_iterator fIt = this_->field_begin();
        fIt != this_->field_end(); fIt++) {
-    (*fIt)->dump();
+    //(*fIt)->dump();
 
     std::string fItName = (*fIt)->getType().getAsString();
 
@@ -108,15 +106,15 @@ bool scmodule::solveChildAsModule(std::vector<scmodulePtrType> &scmList) {
       std::string scmName = i->getNameInfo();
 
       // scmodule
-      if (fItName == ("struct " + scmName)  ){
+      if (fItName == ("struct " + scmName)) {
 
-        addScModuleChild(std::make_shared<scm>(*fIt,i));
+        addScModuleChild(std::make_shared<scm>(*fIt, i));
       }
 
       // scmodule *
-      if (fItName == ("struct " + scmName + " *")  ){
+      if (fItName == ("struct " + scmName + " *")) {
 
-        addScModuleChild(std::make_shared<scm>(*fIt,i));
+        addScModuleChild(std::make_shared<scm>(*fIt, i));
       }
     }
   }

@@ -62,7 +62,7 @@ void vhdl::architectural::architecture::make_builtinList(
 
     vhdlComponent->setNameInfo(nameInfo);
 
-    vhdlComponent->dump(); // setNameInfo(nameInfo);
+    //vhdlComponent->dump(); // setNameInfo(nameInfo);
 
     builtinL.push_back(vhdlComponent);
   }
