@@ -72,7 +72,8 @@ bind *bind::solveBind(const clang::CXXMemberCallExpr *Call) {
   }
 
   // calee Processing (object that holds
-  // Method)+++++==========CALEE : 2 branches : ImplicitCast and Direct ===============+++++++++++
+  // Method)+++++==========CALEE : 2 branches : ImplicitCast and Direct
+  // ===============+++++++++++
   clang::Expr *curExpr = Call->getImplicitObjectArgument();
 
   // implicit cast Case
@@ -91,7 +92,7 @@ bind *bind::solveBind(const clang::CXXMemberCallExpr *Call) {
     calee = asMexp;
   }
 
-  //calee->dump();
+  // calee->dump();
   if (calee && op)
     return new bind(calee, op, method);
 

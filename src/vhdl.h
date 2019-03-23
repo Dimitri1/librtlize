@@ -46,10 +46,9 @@ public:
   using basePtrType = std::shared_ptr<portBase>;
 
   void setNameInfo(std::string n) { nameInfo_ = n; }
-  std::string  getNameInfo() { return nameInfo_; }
+  std::string getNameInfo() { return nameInfo_; }
 
-
-  std::string getNameInfo(std::string n) { return nameInfo_ ; }
+  std::string getNameInfo(std::string n) { return nameInfo_; }
 
   void setQualifier(qualifier::base::basePtrType qual) { qual_ = qual; }
 
@@ -57,15 +56,15 @@ public:
 
   virtual ~portBase() {}
 
-  void bind (std::string n){
+  void bind(std::string n) {
     llvm::errs() << "Bind with " << n << "\n";
-    bindee_=n;
+    bindee_ = n;
   }
 
-  std::string getBindee(){return bindee_;}
+  std::string getBindee() { return bindee_; }
 
 protected:
-  std::string bindee_="";
+  std::string bindee_ = "";
   std::string nameInfo_;
   qualifier::base::basePtrType qual_;
 };
@@ -156,11 +155,7 @@ namespace ssa {
 
 class base {
 public:
-
-   virtual  std::string dump(){
-
-      return  "";
-  }
+  virtual std::string dump() { return ""; }
 
   using basePtrType = std::shared_ptr<base>;
   std::string calee;
@@ -170,12 +165,7 @@ public:
 
 class bind : public base {
 public:
-
-  std::string dump() override {
-
-    return op + "=>" + calee ;
-
-  }
+  std::string dump() override { return op + "=>" + calee; }
 
   bind() {}
 };
@@ -208,22 +198,19 @@ public:
 
   void setNameInfo(std::string n) { nameInfo_ = n; }
 
-
   std::string getNameInfo() { return nameInfo_; }
 
   std::string nameInfo_;
 
-  vlarch::scmodule::scmodulePtrType  getScmDecl() { return scm_->getDecl(); }
+  vlarch::scmodule::scmodulePtrType getScmDecl() { return scm_->getDecl(); }
   scmPtrType getScmField() { return scm_; }
 
-  void setScmField( scmPtrType scf) {  scm_ = scf; }
-
+  void setScmField(scmPtrType scf) { scm_ = scf; }
 
   scmPtrType scm_;
 
   std::vector<decl::generic::basePtrType> generic;
   std::vector<decl::portBase::basePtrType> port;
-
 };
 
 vhdl::architectural::component::basePtrType
@@ -249,50 +236,53 @@ public:
 
   body::basePtrType b;
 
-
-
-  //todo use ref to avoid vector copy
-  //procuce map of each compoent
-  void make_componentMap( std::vector<vlstmt::stmt::stmtPtrType> sL){
+  // todo use ref to avoid vector copy
+  // procuce map of each compoent
+  void make_componentMap(std::vector<vlstmt::stmt::stmtPtrType> sL) {
 
     for (auto &j : sL) {
 
       auto componentBuild = std::make_shared<ssa::bind>();
       std::string op = j.get()->getOp()->getMemberNameInfo().getAsString();
-      std::string calee = j.get()->getCalee()->getMemberNameInfo().getAsString();
+      std::string calee =
+          j.get()->getCalee()->getMemberNameInfo().getAsString();
 
       componentBuild.get()->op = op;
       componentBuild.get()->calee = calee;
 
-      //get child name
-      auto clangOpComponent =  j.get()->getOp();
+      // get child name
+      auto clangOpComponent = j.get()->getOp();
 
-      auto child = * clangOpComponent->child_begin();
+      auto child = *clangOpComponent->child_begin();
 
       std::string clangScModuleFieldDeclComponentName;
-      //if(child){
+      // if(child){
       auto asMexp = clang::dyn_cast<clang::MemberExpr>(child);
 
       std::string nameInfo;
-      if(asMexp){
+      if (asMexp) {
         nameInfo = asMexp->getMemberNameInfo().getAsString();
-        clangScModuleFieldDeclComponentName =  nameInfo  ; //  child->getMemberNameInfo();
+        clangScModuleFieldDeclComponentName =
+            nameInfo; //  child->getMemberNameInfo();
       }
 
-      for (auto i : componentL){
-        if ( clangScModuleFieldDeclComponentName ==i->getScmField()->getNameInfo() ){
-          for (auto k : i->port){
-            if (0)
-              {
-                llvm::errs() << "Clang " << clangOpComponent->getMemberNameInfo().getAsString() << "\n";
-                llvm::errs() << "PortBase " << k->getNameInfo()  << "\n";
-              }
-            if (k->getNameInfo() == clangOpComponent->getMemberNameInfo().getAsString())
+      for (auto i : componentL) {
+        if (clangScModuleFieldDeclComponentName ==
+            i->getScmField()->getNameInfo()) {
+          for (auto k : i->port) {
+            if (0) {
+              llvm::errs()
+                  << "Clang "
+                  << clangOpComponent->getMemberNameInfo().getAsString()
+                  << "\n";
+              llvm::errs() << "PortBase " << k->getNameInfo() << "\n";
+            }
+            if (k->getNameInfo() ==
+                clangOpComponent->getMemberNameInfo().getAsString())
               k->bind(calee);
           }
         }
       }
-
 
       bindL.push_back(componentBuild);
     }
@@ -311,19 +301,17 @@ public:
       auto scoutList = j->getDecl()->getScoutList();
 
       vhdl::architectural::component::basePtrType componentBuild =
-        vhdl::architectural::make_itf(scinList, scoutList);
+          vhdl::architectural::make_itf(scinList, scoutList);
       componentBuild->setNameInfo(nameInfo);
 
       componentBuild->setScmField(j);
 
-
       componentL.push_back(componentBuild);
-
     }
   }
 
-  std::string dumpField(){
-    return  "";//scm_->getNameInfo();
+  std::string dumpField() {
+    return ""; // scm_->getNameInfo();
   }
 
   std::string dump() {
@@ -333,21 +321,20 @@ public:
 
     std::vector<component::basePtrType> tmpComponentL;
 
-    //dump Component
+    // dump Component
     for (auto &componentBuild : componentL) {
       std::string componentGenerics = "";
       std::string componentPorts = "";
 
-      //avoid double inclusion
+      // avoid double inclusion
       bool findIfField = false;
-      for(auto & i : tmpComponentL){
-        findIfField = (i->getNameInfo() == componentBuild->getNameInfo()) ;
-        if(findIfField)
+      for (auto &i : tmpComponentL) {
+        findIfField = (i->getNameInfo() == componentBuild->getNameInfo());
+        if (findIfField)
           break;
       }
-      if(findIfField)
-        break ;
-
+      if (findIfField)
+        break;
 
       for (auto &i : componentBuild.get()->port) {
         componentPorts += i->dump() + ";\n";
@@ -366,16 +353,14 @@ public:
 
       headerStr += decl;
 
-      //avoid double decl inclusion by registering a second list
+      // avoid double decl inclusion by registering a second list
       tmpComponentL.push_back(componentBuild);
     }
 
-
-    //dump map
+    // dump map
     for (auto &componentBuild : componentL) {
       std::string componentGenerics = "";
       std::string componentPorts = "";
-
 
       for (auto &i : componentBuild.get()->port) {
         componentPorts += i->dump() + ";\n";
@@ -393,7 +378,6 @@ public:
           "port(\n" + componentPorts + ");\n" + "end component;\n";
 
       headerStr += decl;
-
     }
 
     std::string builtInStrL = "";
@@ -410,25 +394,25 @@ public:
 
     std::string mapStr = "";
 
-    //dump map
+    // dump map
     for (auto &componentBuild : componentL) {
       std::string componentGenerics = "";
       std::string componentPorts = "";
 
-
       for (auto &i : componentBuild.get()->port) {
-        componentPorts += i->getNameInfo()  +  "=>"  + i->getBindee()  + ";\n";
+        componentPorts += i->getNameInfo() + "=>" + i->getBindee() + ";\n";
       }
 
       /* for (auto &i : componentBuild.get()->generic) { */
       /*   componentGenerics += i->dump() + ";\n"; */
       /* } */
 
-      std::string decl =   componentBuild->getScmField()->getNameInfo() + ":" + componentBuild.get()->getNameInfo() + "\nport map (\n" + componentPorts + componentGenerics + ");\n" ;
-       mapStr += decl;
-
+      std::string decl = componentBuild->getScmField()->getNameInfo() + ":" +
+                         componentBuild.get()->getNameInfo() +
+                         "\nport map (\n" + componentPorts + componentGenerics +
+                         ");\n";
+      mapStr += decl;
     }
-
 
     return archStr = headerStr + bodyStr + mapStr;
   }

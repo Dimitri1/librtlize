@@ -18,7 +18,13 @@ SC_MODULE(writer) {
       out.write(val);
     }
   }
-  SC_CTOR(writer) { SC_THREAD(compute); }
+  SC_CTOR(writer) {
+
+    //-MemberExpr 0x664d108 <line:428:7, col:42> '<bound member function type>' ->create_thread_process 0x5ab8e50
+    //-MemberExpr 0x66a54f0 <line:417:6, col:41> '<bound member function type>' ->create_method_process 0x5ab8b08
+
+    SC_THREAD(compute);
+  }
 };
 
 SC_MODULE(receiver) {

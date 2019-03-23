@@ -58,9 +58,24 @@ void rtlizeAction::EndSourceFileAction() {
 
   // solve sc modules methodes
   for (auto &i : scmoduleList)
+    i->solveCtor();
+
+  // solve sc modules methodes
+  for (auto &i : scmoduleList)
     i->solveMethod();
 
-  //dump SC Module List
+  for (auto &i : scmoduleList) {
+    i->solveMethod();
+
+    // llvm::errs() << &i << "\n";
+
+    for (auto &j : i->getScMethodList()) {
+      llvm::errs() << &j << j->getNameInfo() << "\n";
+      j->dump();
+    }
+  }
+
+  // dump SC Module List
   // llvm::errs() << "[SC Module List]\n";
   // for (auto &i : scmoduleList)
   //    i->dump();
@@ -68,10 +83,6 @@ void rtlizeAction::EndSourceFileAction() {
   std::string rtlCode = vhdl::architectural::lib;
   for (auto &i : scmoduleList)
     rtlCode += i->rtlize() + "\n";
-
-
-
-
 
   llvm::errs() << rtlCode;
 

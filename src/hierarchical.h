@@ -70,41 +70,35 @@ public:
   using scmethodBasePtrType = std::shared_ptr<scmethodBase>;
   using base = scmethodBase;
 
-  virtual void  dump() {
+  virtual void dump() {
     for (auto &i : stmtList_) {
-       i->dump();
+      i->dump();
     }
   }
+
+  std::string getNameInfo() { return name_; }
+  void setNameInfo(std::string name) { name_ = name; }
+
+  void setClangComponent(clang::CXXMethodDecl *c) { this_ = c; }
+
   scmethodBase(clang::CXXMethodDecl *cxxNode) { this_ = cxxNode; }
 
   virtual void solveStmt();
 
-
-  std::vector<vlstmt::stmt::stmtPtrType> getStmtList()
-    {return stmtList_;}
+  std::vector<vlstmt::stmt::stmtPtrType> getStmtList() { return stmtList_; }
 
 protected:
+  std::string name_ = "";
   clang::CXXMethodDecl *this_ = nullptr;
   std::vector<vlstmt::stmt::stmtPtrType> stmtList_;
 };
 
-class scctor : public scmethodBase {
-public:
-  using scctorPtrType = scmethodBase::scmethodBasePtrType;
-
-  void solveStmt() override;
-
-  void   dump() override { base::dump(); }
-
-public:
-  scctor(clang::CXXMethodDecl *cxxNode) : scmethodBase(cxxNode) {}
-};
 class scmethod : public scmethodBase {
 public:
   using scmethodPtrType = scmethodBase::scmethodBasePtrType;
 
 public:
-  scmethod(clang::CXXMethodDecl *cxxNode) : scmethodBase(cxxNode) {}
+  scmethod(clang::CXXMethodDecl *cxxNode = nullptr) : scmethodBase(cxxNode) {}
 };
 
 class scthread : public scmethodBase {
@@ -112,7 +106,21 @@ public:
   using scthreadPtrType = scmethodBase::scmethodBasePtrType;
 
 public:
-  scthread(clang::CXXMethodDecl *cxxNode) : scmethodBase(cxxNode) {}
+  scthread(clang::CXXMethodDecl *cxxNode = nullptr) : scmethodBase(cxxNode) {}
+};
+
+class scctor : public scmethodBase {
+public:
+  // contains specific methods
+  using scctorPtrType = std::shared_ptr<scctor>;
+
+  void solveStmt(std::vector<scmethod::scmethodPtrType> &methodL,
+                 std::vector<scthread::scthreadPtrType> &threadL);
+
+  void dump() override { base::dump(); }
+
+public:
+  scctor(clang::CXXMethodDecl *cxxNode) : scmethodBase(cxxNode) {}
 };
 
 class scm;
@@ -133,8 +141,7 @@ public:
 
   void addCtor(scctorPtrType ctor) { ctor_ = ctor; }
 
-  scctorPtrType getCtor(){return ctor_;}
-
+  scctorPtrType getCtor() { return ctor_; }
 
   void addScModuleChild(scmPtrType scm) { scmoduleList_.push_back(scm); }
 
@@ -192,10 +199,13 @@ public:
     }
   }
 
-  auto getThis(){return this_;}
+  auto getThis() { return this_; }
 
   std::vector<scin::scinPtrType> getScinList() { return scinList_; }
   std::vector<scout::scoutPtrType> getScoutList() { return scoutList_; }
+
+  std::vector<scmethodPtrType> getScMethodList() { return scmethodList_; }
+  std::vector<scthreadPtrType> getScThreadList() { return scthreadList_; }
 
 protected:
   std::vector<scmethodPtrType> scmethodList_;
@@ -212,19 +222,20 @@ protected:
 
 class scm {
 public:
-  scm(clang::FieldDecl *field, scmodule::scmodulePtrType scm) { this_ = field; scmDecl_ = scm; }
+  scm(clang::FieldDecl *field, scmodule::scmodulePtrType scm) {
+    this_ = field;
+    scmDecl_ = scm;
+  }
 
   std::string getNameInfo() { return this_->getNameAsString(); }
 
-  clang::FieldDecl * getThis() { return this_; }
-
-
+  clang::FieldDecl *getThis() { return this_; }
 
   scmodule::scmodulePtrType getDecl() { return scmDecl_; }
 
 protected:
   clang::FieldDecl *this_ = nullptr;
-  scmodule::scmodulePtrType  scmDecl_;
+  scmodule::scmodulePtrType scmDecl_;
 };
 
 } // end namespace vlarch
