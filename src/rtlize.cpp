@@ -64,16 +64,13 @@ void rtlizeAction::EndSourceFileAction() {
   for (auto &i : scmoduleList)
     i->solveMethod();
 
-  for (auto &i : scmoduleList) {
-    i->solveMethod();
+  // for (auto &i : scmoduleList) {
+  //   for (auto &j : i->getScMethodList()) {
 
-    // llvm::errs() << &i << "\n";
-
-    for (auto &j : i->getScMethodList()) {
-      llvm::errs() << &j << j->getNameInfo() << "\n";
-      j->dump();
-    }
-  }
+  //     llvm::errs() << &j << j->getNameInfo() << "\n";
+  //     j->dump();
+  //   }
+  // }
 
   // dump SC Module List
   // llvm::errs() << "[SC Module List]\n";

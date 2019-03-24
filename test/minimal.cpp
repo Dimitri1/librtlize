@@ -63,9 +63,12 @@ SC_MODULE(receiver2) {
     std::cout << name() << ": window rx " << swindow << endl;
   }
 
+  void c1(){}
+  void c2(){}
   SC_CTOR(receiver2) {
     SC_METHOD(compute);
     sensitive << in;
+    SC_THREAD(c1);
   }
 };
 

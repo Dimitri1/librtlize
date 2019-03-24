@@ -53,7 +53,7 @@ void scctor::solveStmt(std::vector<scmodule::scmethodPtrType> &methodL,
   if (!body)
     return;
 
-  // solveBind
+  // solve bind
   for (auto &stmtIt : body->children()) {
     auto curExpr = clang::dyn_cast<clang::CXXMemberCallExpr>(stmtIt);
     if (curExpr) {
@@ -64,12 +64,25 @@ void scctor::solveStmt(std::vector<scmodule::scmethodPtrType> &methodL,
     }
   }
 
-  // solve SCTHREAD decl
+  // solve SCMETHOD/SCTHREAD
   std::string methodName = "";
+  llvm::errs() << "Call \n";
   for (auto &stmtIt : body->children()) {
-    auto curExpr = clang::dyn_cast<clang::CompoundStmt>(stmtIt);
+    
+		
+		auto sensBeg = clang::dyn_cast<clang::CXXOperatorCallExpr>(stmtIt);
+		if (sensBeg)
+		{
+	    sensBeg->dump();
+		
+		}
+		
+		
+		auto curExpr = clang::dyn_cast<clang::CompoundStmt>(stmtIt);
+    llvm::errs() << "IT = \n";
 
-    // curExpr->dump();
+
+
     if (curExpr) {
       auto firstStmt = curExpr->child_begin();
       while (1) {
@@ -80,39 +93,39 @@ void scctor::solveStmt(std::vector<scmodule::scmethodPtrType> &methodL,
           auto itMexp = clang::dyn_cast<clang::MemberExpr>(*cexprFirst);
           if (itMexp) {
             auto name = itMexp->getMemberNameInfo().getAsString();
-            // llvm::errs() << "Name Info " << name << "\n" ;
 
-            if (name == "create_thread_process") { // llvm::errs() << "Found "
-                                                   // << name << "\n";
-                                                   // firstStmt->dump();
+            if (name == "create_thread_process") {
               auto childSecond = firstStmt->child_begin();
               childSecond++;
-              if (*childSecond) { // childSecond->dump();
+              if (*childSecond) {
                 auto strFind = childSecond->child_begin();
                 auto strLit = clang::dyn_cast<clang::StringLiteral>(*strFind);
-                if (strLit) { // llvm::errs() << strLit->getString() ; //
-                              // ->dump();
+                if (strLit) {
+                  llvm::errs() << "found = \n";
+
                   methodName = strLit->getString();
                   methodL.push_back(std::make_shared<scmethod>());
                   methodL.back()->setNameInfo(methodName);
                 }
               }
-              llvm::errs() << "Found " << methodName << "As " << name << "\n";
+              //TODO comments
+              //llvm::errs() << "Found " << methodName << "As " << name << "\n";
             }
             if (name == "create_method_process") {
               auto childSecond = firstStmt->child_begin();
               childSecond++;
-              if (*childSecond) { // childSecond->dump();
+              if (*childSecond) {
                 auto strFind = childSecond->child_begin();
                 auto strLit = clang::dyn_cast<clang::StringLiteral>(*strFind);
-                if (strLit) { // llvm::errs() << strLit->getString() ; //
-                              // ->dump();
+                if (strLit) {
+                  llvm::errs() << "found = \n";
                   methodName = strLit->getString();
                   methodL.push_back(std::make_shared<scmethod>());
                   methodL.back()->setNameInfo(methodName);
                 }
               }
-              llvm::errs() << "Found " << methodName << "As " << name << "\n";
+              //TODO comments
+              //llvm::errs() << "Found " << methodName << "As " << name << "\n";
             }
           }
           break;
@@ -149,14 +162,29 @@ bool scmodule::solveCtor() {
   {
     auto ctor = this_->ctor_begin();
     if (*ctor) {
+      ctor->dump();
       addCtor(std::make_shared<scctor>(*ctor));
     }
   }
   {
     auto ctor = getCtor();
+    //ctor statement solving has two architectural purposes
+    // (1)-> solve bind call
+    //       bind is as stm, so bind call are filled in scCtor stmtList member
+    // (2)-> solve SC_METHOD/SC_THREAD/SC_CTHREAD scmodule method qualifier
+    //       each SC_METHOD/SC_THREAD/SC_CTHREAD creates a new scMethodBase
+    //       derived type object in correspondant scmodule member list
+    //       scMethodList_/scthreadList_
+    // (3)-> sensitive <<
+    //       for each SC_METHOD/SC_THREAD
+    //       a solve operation is performed to find each sensitice << call
+    //       sensitive signals are filled into sensitive list of previously
+    //       created SC_METHOD/SC_THREAD obj
+    //       The sensitive solving operation has to be done in the same phase
+    //       than (2) because sensitive << does not indicates which SC_METHOD/SC_THREAD
+    //       explicitely, but implicitely by stMt position (sensitive << is after SC_METHOD/SC_THREAD)
     ctor->solveStmt(scmethodList_, scthreadList_);
   }
-
   return true;
 }
 
